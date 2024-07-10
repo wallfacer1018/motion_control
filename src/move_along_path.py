@@ -8,6 +8,7 @@ import rospy
 from uwb_pos import UWBListener  # Import the UWBListener class
 import threading
 
+
 # Initialize the UWBListener globally
 listener = UWBListener()
 
@@ -81,14 +82,22 @@ def angle_between_vectors(vector_a, vector_b):
 
 # ros Subscriber：使用uwb获得当前坐标，频率为50hz，使用kalman滤波以获得更精确的位置
 # 根据基站与地图的相对位置，调整坐标
-# uwb返回的坐标值以米为单位，在本程序中使用厘米为单位，因此要乘100
+# uwb返回的坐标值以米为单位，在本程序中使用厘米为单位，因此要乘100，单位：cm
 def get_current_pos():
     print(listener.current_pos)
     pos=np.zeros(2)
     pos[0]=listener.current_pos[0]*100
-    pos[1]=listener.current_pos[1]*100
+    pos[1]=listener.current_pos[2]*100
     print(pos)
     return pos
+
+# 同样使用uwb获取坐标，利用kalman滤波可以实现获得当前速度，单位：cm/s
+def get_curent_vel():
+    vel=np.zeros(2)
+    vel[0]=listener.current_pos[1]*100
+    vel[1]=listener.current_pos[3]*100
+    print(vel)
+    return vel
 
 # 从一个节点走到另一个节点的运动控制，带有偏移矫正
 def move_to(p1, p2):
