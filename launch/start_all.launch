@@ -1,0 +1,7 @@
+<launch>
+    <!-- 启动 nlink_parser 的 linktrack.launch -->
+    <include file="$(find nlink_parser)/launch/linktrack.launch" />
+    
+    <!-- 启动 Python 脚本 move_along_path.py -->
+    <node name="move_along_path" pkg="motion_control" type="move_along_path.py" output="screen" launch-prefix="python3" />
+</launch>
