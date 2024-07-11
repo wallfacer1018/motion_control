@@ -84,7 +84,7 @@ def angle_between_vectors(vector_a, vector_b):
 # 根据基站与地图的相对位置，调整坐标
 # uwb返回的坐标值以米为单位，在本程序中使用厘米为单位，因此要乘100，单位：cm
 def get_current_pos():
-    print(listener.current_pos)
+    # print(listener.current_pos)
     pos=np.zeros(2)
     pos[0]=listener.current_pos[0]*100
     pos[1]=listener.current_pos[2]*100
