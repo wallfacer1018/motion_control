@@ -88,7 +88,7 @@ def get_current_pos():
     pos=np.zeros(2)
     pos[0]=listener.current_pos[0]*100
     pos[1]=listener.current_pos[2]*100
-    print("pos:", pos)
+    # print("pos:", pos)
     return pos
 
 # 同样使用uwb获取坐标，利用kalman滤波可以实现获得当前速度，单位：cm/s
@@ -96,7 +96,7 @@ def get_curent_vel():
     vel=np.zeros(2)
     vel[0]=listener.current_pos[1]*100
     vel[1]=listener.current_pos[3]*100
-    print("vel:", vel)
+    # print("vel:", vel)
     return vel
 
 # 在这里实现pure pursuit纯跟踪算法，返回转向半径r，负的r右转，正的r左转
@@ -138,6 +138,7 @@ def move_to(p1, p2):
             if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
                 break
             r=pure_pursuit(get_curent_vel(), get_current_pos(), sub_goal)
+            print("pos:"+current_pos)
             pure_pursuit_vel(v_mid=50, r=r, l=18)
             time.sleep(0.1)
         
