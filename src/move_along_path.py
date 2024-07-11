@@ -136,7 +136,7 @@ def move_to(p1, p2):
             sub_target_vector = np.subtract(sub_goal, p1)
             distance_to_target = np.linalg.norm(current_vector)
             r=pure_pursuit(get_curent_vel(), get_current_pos(), sub_goal)
-            print("pos:"+current_pos)
+            print("pos:", current_pos)
             pure_pursuit_vel(v_mid=50, r=r, l=18)
             if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
                 break
