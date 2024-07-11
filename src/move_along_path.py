@@ -88,7 +88,7 @@ def get_current_pos():
     pos=np.zeros(2)
     pos[0]=listener.current_pos[0]*100
     pos[1]=listener.current_pos[2]*100
-    print(pos)
+    print("pos:", pos)
     return pos
 
 # 同样使用uwb获取坐标，利用kalman滤波可以实现获得当前速度，单位：cm/s
@@ -96,27 +96,48 @@ def get_curent_vel():
     vel=np.zeros(2)
     vel[0]=listener.current_pos[1]*100
     vel[1]=listener.current_pos[3]*100
-    print(vel)
+    print("vel:", vel)
     return vel
 
-# 从一个节点走到另一个节点的运动控制，带有偏移矫正
+# 在这里实现pure pursuit纯跟踪算法，返回转向半径r，负的r右转，正的r左转
+def pure_pursuit(current_vel, current_pos, target_pos):
+    current_vector = np.subtract(target_pos, current_pos)
+    alpha = angle_between_vectors(current_vel, current_vector)/180*np.pi
+    return np.linalg.norm(current_vector)/(2*np.sin(alpha))
+
+def pure_pursuit_vel(v_mid, r, l):
+    if -l/2 <= r <= l/2:
+        if r >= 0:
+            r = l/2
+        else:
+            r = -l/2
+    set_vel(int(v_mid*(1-l/(2*r))), int(v_mid*(1+l/(2*r))))
+
+
+def generate_sub_goals(p1, p2, num_sub_goals):
+    return [p1 + (p2 - p1) * i / num_sub_goals for i in range(1, num_sub_goals + 1)]
+
+
+# 从一个节点走到另一个节点的运动控制，带有偏移矫正，使用pure pursuit纯跟踪算法
 def move_to(p1, p2):
     target_vector = np.subtract(p2, p1)
+    sub_goals=generate_sub_goals(p1,p2,int(np.linalg.norm(target_vector)/10))
     while True:
-        current_pos = get_current_pos()
-        current_vector = np.subtract(p2, current_pos)
-        distance_to_target = np.linalg.norm(current_vector)
-        if distance_to_target <1:  # Adjust the threshold as needed
-            break
-        angle = angle_between_vectors(target_vector, current_vector)
-        if abs(angle) > 5:  # Adjust the threshold as needed
-            if angle > 0:
-                set_vel(50, 60)  # Turn left
-            else:
-                set_vel(60, 50)  # Turn right
-        else:
-            set_vel(50, 50)  # Move forward
-        time.sleep(0.1)  # Adjust the delay as needed
+        for sub_goal in sub_goals:
+            current_pos = get_current_pos()
+            current_vector = np.subtract(sub_goal, current_pos)
+            sub_target_vector = np.subtract(sub_goal, p1)
+            distance_to_target = np.linalg.norm(current_vector)
+            if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
+                break
+            r=pure_pursuit(get_curent_vel(), get_current_pos(), sub_goal)
+            pure_pursuit_vel(v_mid=50, r=r, l=18)
+            time.sleep(0.1)
+        
+        # angle = angle_between_vectors(target_vector, current_vector)
+        if np.dot(np.subtract(p2, current_pos), target_vector) <= 0:  # Adjust the threshold as needed
+                break
+        
     set_vel(0, 0)  # Stop the vehicle
 
 if __name__ == '__main__':
