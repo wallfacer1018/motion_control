@@ -115,7 +115,14 @@ def pure_pursuit_vel(v_mid, r, l):
 
 
 def generate_sub_goals(p1, p2, num_sub_goals):
-    return [p1 + (p2 - p1) * i / num_sub_goals for i in range(1, num_sub_goals + 1)]
+    sub_goals = []
+    for i in range(1, num_sub_goals + 1):
+        sub_goal = (
+            p1[0] + (p2[0] - p1[0]) * i / num_sub_goals,
+            p1[1] + (p2[1] - p1[1]) * i / num_sub_goals
+        )
+        sub_goals.append(sub_goal)
+    return sub_goals
 
 
 # 从一个节点走到另一个节点的运动控制，带有偏移矫正，使用pure pursuit纯跟踪算法
