@@ -106,11 +106,11 @@ def pure_pursuit(current_vel, current_pos, target_pos):
     return np.linalg.norm(current_vector)/(2*np.sin(alpha))
 
 def pure_pursuit_vel(v_mid, r, l):
-    if -l/2 <= r <= l/2:
+    if -l <= r <= l:
         if r >= 0:
-            r = l/2
+            r = l
         else:
-            r = -l/2
+            r = -l
     set_vel(int(v_mid*(1-l/(2*r))), int(v_mid*(1+l/(2*r))))
 
 
@@ -128,9 +128,9 @@ def generate_sub_goals(p1, p2, num_sub_goals):
 # 从一个节点走到另一个节点的运动控制，带有偏移矫正，使用pure pursuit纯跟踪算法
 def move_to(p1, p2):
     target_vector = np.subtract(p2, p1)
-    sub_goals=generate_sub_goals(p1,p2,int(np.linalg.norm(target_vector)/10))
-    while True:
-        for sub_goal in sub_goals:
+    sub_goals=generate_sub_goals(p1,p2,1)
+    for sub_goal in sub_goals:
+        while True:
             current_pos = get_current_pos()
             current_vector = np.subtract(sub_goal, current_pos)
             sub_target_vector = np.subtract(sub_goal, p1)
@@ -142,11 +142,12 @@ def move_to(p1, p2):
                 break
             time.sleep(0.1)
         
-        # angle = angle_between_vectors(target_vector, current_vector)
-        if np.dot(np.subtract(p2, current_pos), target_vector) <= 0:  # Adjust the threshold as needed
-                break
-        
+    # angle = angle_between_vectors(target_vector, current_vector)
     set_vel(0, 0)  # Stop the vehicle
+    # if np.dot(np.subtract(p2, current_pos), target_vector) <= 0:  # Adjust the threshold as needed
+    #         break
+        
+    
 
 if __name__ == '__main__':
     rospy.init_node('move_along_path', anonymous=True)
@@ -197,5 +198,6 @@ if __name__ == '__main__':
         time.sleep(1)
 
     print('process finished')
+    set_vel(0, 0)
 
     ser.close()
