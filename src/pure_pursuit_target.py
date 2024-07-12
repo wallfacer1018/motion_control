@@ -57,28 +57,28 @@ def append_point(path):
     path.append(new_point)
     return path
 
-# Example usage
-path = [(135, 25), (40, 170), (40, 375), (125, 352)]
-d = 10
-path=append_point(path)
-# print(path)
+# # Example usage
+# path = [(135, 25), (40, 170), (40, 375), (125, 352)]
+# d = 10
+# path=append_point(path)
+# # print(path)
 
-current_pos = (40, 240)
-target_pos = find_target(path, current_pos, d)
-print(target_pos)
+# current_pos = (40, 240)
+# target_pos = find_target(path, current_pos, d)
+# print(target_pos)
 
-current_pos = (40, 370)
-target_pos = find_target(path, current_pos, d)
-print(target_pos)
+# current_pos = (40, 370)
+# target_pos = find_target(path, current_pos, d)
+# print(target_pos)
 
-current_pos = (135, 25)
-target_pos = find_target(path, current_pos, d)
-print(target_pos)
+# current_pos = (135, 25)
+# target_pos = find_target(path, current_pos, d)
+# print(target_pos)
 
-current_pos = (125, 360)
-target_pos = find_target(path, current_pos, d)
-print(target_pos)
+# current_pos = (125, 360)
+# target_pos = find_target(path, current_pos, d)
+# print(target_pos)
 
-current_pos = (40, 0)
-target_pos = find_target(path, current_pos, d)
-print(target_pos)
+# current_pos = (40, 0)
+# target_pos = find_target(path, current_pos, d)
+# print(target_pos)
