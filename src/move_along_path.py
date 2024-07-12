@@ -6,6 +6,7 @@ import time
 import serial
 import rospy
 from uwb_pos import UWBListener  # Import the UWBListener class
+import pure_pursuit_target
 import threading
 
 
@@ -124,6 +125,18 @@ def generate_sub_goals(p1, p2, num_sub_goals):
         sub_goals.append(sub_goal)
     return sub_goals
 
+# 用于找到path上current_pos为圆心，半径为d的点，path以一串二维点表示，开始是起点，结束是终点
+# 不是指path上写出的点，而是相邻点之间的连线与圆的交点
+# 向前找点指的是在path上尽量向着终点找
+# 如果在多段连线上都找到点，优先选择后面一段上的点
+# 如果找到多个点，向前找点
+# 如果没找到点，扩大d再找，向前找点
+# 在终点附近，沿着倒数第二个点到终点的射线找
+# current_pos是一个二维点，表示当前位置
+# def find_target(path, current_pos, d):
+
+#     return target_pos
+
 
 # 从一个节点走到另一个节点的运动控制，带有偏移矫正，使用pure pursuit纯跟踪算法
 def move_to(p1, p2):
@@ -146,6 +159,21 @@ def move_to(p1, p2):
     set_vel(0, 0)  # Stop the vehicle
     # if np.dot(np.subtract(p2, current_pos), target_vector) <= 0:  # Adjust the threshold as needed
     #         break
+
+def path_track(path):
+    while True:
+        current_pos = get_current_pos()
+        target = pure_pursuit_target.find_target(path, current_pos, d=30)
+        current_vector = np.subtract(path(-2), current_pos)
+        r=pure_pursuit(get_curent_vel(), get_current_pos(), target)
+        print("pos:", current_pos)
+        pure_pursuit_vel(v_mid=50, r=r, l=18)
+        # if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
+        #     break
+        distance_to_target = np.linalg.norm(current_vector)
+        if distance_to_target <= 10:
+            break
+        time.sleep(0.1)
         
     
 
@@ -179,23 +207,26 @@ if __name__ == '__main__':
     path = A_star_v2.a_star(graph, start, goal)
     print("Path:", path)
 
-    # 从path中的起点开始，走过每一个坐标点，最终到达终点
-    # 假设一开始小车朝向y轴放置
-    for i in range(0, len(path) - 1):
-        if i == 0:
-            v0 = (0, 1)
-        else:
-            v0 = np.subtract(path[i], path[i - 1])
-        v1 = np.subtract(path[i+1], path[i])
-        angle = angle_between_vectors(v0, v1)
+    # # 从path中的起点开始，走过每一个坐标点，最终到达终点
+    # # 假设一开始小车朝向y轴放置
+    # for i in range(0, len(path) - 1):
+    #     if i == 0:
+    #         v0 = (0, 1)
+    #     else:
+    #         v0 = np.subtract(path[i], path[i - 1])
+    #     v1 = np.subtract(path[i+1], path[i])
+    #     angle = angle_between_vectors(v0, v1)
 
-        # 原地转向
-        turn(angle)
+    #     # 原地转向
+    #     turn(angle)
 
-        time.sleep(3)
-        # 走到下一个节点
-        move_to(path[i], path[i+1])
-        time.sleep(1)
+    #     time.sleep(3)
+    #     # 走到下一个节点
+    #     move_to(path[i], path[i+1])
+    #     time.sleep(1)
+
+    path = pure_pursuit_target.append_point(path)
+    path_track(path)
 
     print('process finished')
     set_vel(0, 0)
