@@ -153,7 +153,7 @@ def path_track(path):
         r, alpha=pure_pursuit(get_curent_vel(), get_current_pos(), target)
         print("pos:", current_pos, "target:", target)
         print("r:",r,"  alpha:",alpha)
-        v_mid = 160/np.sqrt(alpha*60)
+        v_mid = 160/(np.abs(alpha)*60)**0.5
         if v_mid>100:
             v_mid=100
         elif v_mid<20:
@@ -234,8 +234,9 @@ if __name__ == '__main__':
     set_vel(1,1)
     set_vel(0,0)
     for i in range(100):
-    	set_vel(0,0)
+        set_vel(0,0)
         time.sleep(0.01)
+    time.sleep(0.01)
     ser.close()
 
     

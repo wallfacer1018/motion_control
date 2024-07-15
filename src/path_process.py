@@ -55,7 +55,7 @@ def plot_paths(original_points, interpolated_points):
     plt.grid(True)
     plt.show()
 
-def find_nearest_point(path, point):
+def find_nearest_point_idx(path, point):
     """
     Finds the nearest point on the path to the given point using KDTree.
     
@@ -75,16 +75,16 @@ def find_nearest_point(path, point):
     # Query the tree for the nearest point
     distance, nearest_idx = tree.query(point)
     
-    return tuple(path[nearest_idx])
+    return nearest_idx
 
-# Example usage
-original_path = [(6, 0), (1, 2), (4, 5), (7, 8), (10, 10)]
-interval = 0.2
+# # Example usage
+# original_path = [(6, 0), (1, 2), (4, 5), (7, 8), (10, 10)]
+# interval = 0.2
 
-interpolated_path = interpolate_path(original_path, interval)
-plot_paths(original_path, interpolated_path)
+# interpolated_path = interpolate_path(original_path, interval)
+# plot_paths(original_path, interpolated_path)
 
-# Find the nearest point on the interpolated path to a given point
-test_point = (3, 1)
-nearest_point = find_nearest_point(interpolated_path, test_point)
-print(f"The nearest point on the path to {test_point} is {nearest_point}")
+# # Find the nearest point on the interpolated path to a given point
+# test_point = (3, 1)
+# nearest_point = find_nearest_point(interpolated_path, test_point)
+# print(f"The nearest point on the path to {test_point} is {nearest_point}")
