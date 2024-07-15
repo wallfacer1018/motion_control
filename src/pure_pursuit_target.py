@@ -48,18 +48,19 @@ def find_target(path, current_pos, d):
                                                 np.linalg.norm(np.array(point) - np.array(current_pos))))
         return found_points[0]
 
-    return find_target(path, current_pos, 1.5*d) # 如果没有找到，扩大d再找
+    # return find_target(path, current_pos, 1.5*d) # 如果没有找到，扩大d再找
+    return path[-2]
 
 # 通过加一个path上最后两个点射线上的点，点延伸path
 def append_point(path):
     vector = np.subtract(path[-1], path[-2])
-    new_point = tuple(path[-1] + vector)
+    new_point = tuple(path[-1] + 0.5*vector)
     path.append(new_point)
     return path
 
 # # Example usage
-# path = [(135, 25), (40, 170), (40, 375), (125, 352)]
-# d = 10
+# path = [(135, 25), (40, 170), (40, 375), (125, 375)]
+# d = 20
 # path=append_point(path)
 # # print(path)
 

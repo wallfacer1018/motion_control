@@ -104,14 +104,14 @@ def get_curent_vel():
 def pure_pursuit(current_vel, current_pos, target_pos):
     current_vector = np.subtract(target_pos, current_pos)
     alpha = angle_between_vectors(current_vel, current_vector)/180*np.pi
-    return np.linalg.norm(current_vector)/(2*np.sin(alpha))
+    return np.linalg.norm(current_vector)/(2*np.sin(alpha)), alpha
 
 def pure_pursuit_vel(v_mid, r, l):
-    if -l <= r <= l:
+    if -l/2 <= r <= l/2:
         if r >= 0:
-            r = l
+            r = l/2
         else:
-            r = -l
+            r = -l/2
     set_vel(int(v_mid*(1-l/(2*r))), int(v_mid*(1+l/(2*r))))
 
 
@@ -164,16 +164,21 @@ def path_track(path):
     while True:
         current_pos = get_current_pos()
         target = pure_pursuit_target.find_target(path, current_pos, d=30)
-        current_vector = np.subtract(path(-2), current_pos)
-        r=pure_pursuit(get_curent_vel(), get_current_pos(), target)
-        print("pos:", current_pos)
-        pure_pursuit_vel(v_mid=50, r=r, l=18)
+        current_vector = np.subtract(path[-2], current_pos)
+        r, alpha=pure_pursuit(get_curent_vel(), get_current_pos(), target)
+        print("pos:", current_pos, "target:", target)
+        print("r:",r,"  alpha:",alpha)
+        if -0.3<alpha<0.3:
+            pure_pursuit_vel(v_mid=80, r=r, l=18)
+        else:
+            pure_pursuit_vel(v_mid=30, r=r, l=16)
         # if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
         #     break
         distance_to_target = np.linalg.norm(current_vector)
-        if distance_to_target <= 10:
+        if distance_to_target <= 30 and np.dot(current_vector, np.subtract(path[-2],path[-3])) <= 0:
             break
-        time.sleep(0.1)
+        time.sleep(0.05)
+    set_vel(0,0)
         
     
 
@@ -189,22 +194,23 @@ if __name__ == '__main__':
     print('serial opened')
 
     # 建立地图，找到path
-    points = [(170, 80), (340, 80), (30, 90),
-              (30, 230), (170, 225), (200, 235), (340, 230),
-              (30, 375), (200, 375), (340, 375), (420, 375)]
+    points = [(180, 60), (340, 80), (30, 90),
+              (30, 240), (180, 225), (215, 235), (340, 230),
+              (30, 385), (220, 375), (340, 375), (420, 375)]
     obstacles = [((180, 50), (310, 200)),
-                 ((60, 110), (150, 200)),
+                 ((60, 110), (170, 200)),
                  ((370, 50), (450, 200)),
                  ((60, 260), (190, 350)),
                  ((230, 260), (310, 350)),
                  ((370, 260), (450, 350))]
     start = (135, 25)
-    goal = (100, 352)
+    goal = (210, 372)
     points.append(start)
     points.append(goal)
     graph = A_star_v2.create_graph(points, obstacles)
     # A_star_v2.visualize_graph(graph, obstacles)
     path = A_star_v2.a_star(graph, start, goal)
+    # path = [(220, 235), (220, 372)]
     print("Path:", path)
 
     # # 从path中的起点开始，走过每一个坐标点，最终到达终点
@@ -224,11 +230,25 @@ if __name__ == '__main__':
     #     # 走到下一个节点
     #     move_to(path[i], path[i+1])
     #     time.sleep(1)
-
+    time.sleep(1)
+    set_vel(20,20)
+    time.sleep(2)
     path = pure_pursuit_target.append_point(path)
     path_track(path)
-
-    print('process finished')
+    path = [(220, 375), (370,375), (370,25), (135,25)]
+    print(path)
+    path = pure_pursuit_target.append_point(path)
+    path_track(path)
+    
     set_vel(0, 0)
-
+    time.sleep(0.1)
+    
+    print('process finished')
+    set_vel(1,1)
+    set_vel(0,0)
+    for i in range(100):
+    	set_vel(0,0)
+        time.sleep(0.01)
     ser.close()
+
+    
