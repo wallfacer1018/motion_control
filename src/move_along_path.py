@@ -8,6 +8,7 @@ import rospy
 from uwb_pos import UWBListener  # Import the UWBListener class
 import pure_pursuit_target
 import threading
+import path_process
 
 
 # Initialize the UWBListener globally
@@ -115,63 +116,49 @@ def pure_pursuit_vel(v_mid, r, l):
     set_vel(int(v_mid*(1-l/(2*r))), int(v_mid*(1+l/(2*r))))
 
 
-def generate_sub_goals(p1, p2, num_sub_goals):
-    sub_goals = []
-    for i in range(1, num_sub_goals + 1):
-        sub_goal = (
-            p1[0] + (p2[0] - p1[0]) * i / num_sub_goals,
-            p1[1] + (p2[1] - p1[1]) * i / num_sub_goals
-        )
-        sub_goals.append(sub_goal)
-    return sub_goals
 
-# 用于找到path上current_pos为圆心，半径为d的点，path以一串二维点表示，开始是起点，结束是终点
-# 不是指path上写出的点，而是相邻点之间的连线与圆的交点
-# 向前找点指的是在path上尽量向着终点找
-# 如果在多段连线上都找到点，优先选择后面一段上的点
-# 如果找到多个点，向前找点
-# 如果没找到点，扩大d再找，向前找点
-# 在终点附近，沿着倒数第二个点到终点的射线找
-# current_pos是一个二维点，表示当前位置
-# def find_target(path, current_pos, d):
-
-#     return target_pos
-
-
-# 从一个节点走到另一个节点的运动控制，带有偏移矫正，使用pure pursuit纯跟踪算法
-def move_to(p1, p2):
-    target_vector = np.subtract(p2, p1)
-    sub_goals=generate_sub_goals(p1,p2,1)
-    for sub_goal in sub_goals:
-        while True:
-            current_pos = get_current_pos()
-            current_vector = np.subtract(sub_goal, current_pos)
-            sub_target_vector = np.subtract(sub_goal, p1)
-            distance_to_target = np.linalg.norm(current_vector)
-            r=pure_pursuit(get_curent_vel(), get_current_pos(), sub_goal)
-            print("pos:", current_pos)
-            pure_pursuit_vel(v_mid=50, r=r, l=18)
-            if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
-                break
-            time.sleep(0.1)
+# # 从一个节点走到另一个节点的运动控制，带有偏移矫正，使用pure pursuit纯跟踪算法
+# def move_to(p1, p2):
+#     target_vector = np.subtract(p2, p1)
+#     # sub_goals=generate_sub_goals(p1,p2,1)
+#     for sub_goal in sub_goals:
+#         while True:
+#             current_pos = get_current_pos()
+#             current_vector = np.subtract(sub_goal, current_pos)
+#             sub_target_vector = np.subtract(sub_goal, p1)
+#             distance_to_target = np.linalg.norm(current_vector)
+#             r=pure_pursuit(get_curent_vel(), get_current_pos(), sub_goal)
+#             print("pos:", current_pos)
+#             pure_pursuit_vel(v_mid=50, r=r, l=18)
+#             if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
+#                 break
+#             time.sleep(0.1)
         
-    # angle = angle_between_vectors(target_vector, current_vector)
-    set_vel(0, 0)  # Stop the vehicle
-    # if np.dot(np.subtract(p2, current_pos), target_vector) <= 0:  # Adjust the threshold as needed
-    #         break
+    # # angle = angle_between_vectors(target_vector, current_vector)
+    # set_vel(0, 0)  # Stop the vehicle
+    # # if np.dot(np.subtract(p2, current_pos), target_vector) <= 0:  # Adjust the threshold as needed
+    # #         break
 
 def path_track(path):
+    led = 20
+    interval = 2
+    path_interpolated = path_process.interpolate_path(path, interval)
     while True:
         current_pos = get_current_pos()
-        target = pure_pursuit_target.find_target(path, current_pos, d=30)
+        target_idx = path_process.find_nearest_point_idx(path_interpolated, current_pos)+int(led/interval)
+        if target_idx >= len(path_interpolated):
+            target_idx = len(path_interpolated)-1
+        target = path_interpolated[target_idx]
         current_vector = np.subtract(path[-2], current_pos)
         r, alpha=pure_pursuit(get_curent_vel(), get_current_pos(), target)
         print("pos:", current_pos, "target:", target)
         print("r:",r,"  alpha:",alpha)
-        if -0.3<alpha<0.3:
-            pure_pursuit_vel(v_mid=80, r=r, l=18)
-        else:
-            pure_pursuit_vel(v_mid=30, r=r, l=16)
+        v_mid = 160/np.sqrt(alpha*60)
+        if v_mid>100:
+            v_mid=100
+        elif v_mid<20:
+            v_mid=20
+        pure_pursuit_vel(v_mid, r=r, l=16)
         # if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
         #     break
         distance_to_target = np.linalg.norm(current_vector)
