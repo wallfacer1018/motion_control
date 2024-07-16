@@ -6,7 +6,6 @@ import time
 import serial
 import rospy
 from uwb_pos import UWBListener  # Import the UWBListener class
-import pure_pursuit_target
 import threading
 import path_process
 
@@ -142,7 +141,9 @@ def pure_pursuit_vel(v_mid, r, l):
 def path_track(path):
     led = 30
     interval = 2
-    path_interpolated = path_process.interpolate_path(path, interval)
+    radius = 50
+    path_smoothed = path_process.smooth_path_with_corners(path, radius)
+    path_interpolated = path_process.interpolate_path(path_smoothed, interval)
     while True:
         current_pos = get_current_pos()
         target_idx = path_process.find_nearest_point_idx(path_interpolated, current_pos)+int(led/interval)
@@ -220,11 +221,11 @@ if __name__ == '__main__':
     time.sleep(1)
     set_vel(20,20)
     time.sleep(2)
-    path = pure_pursuit_target.append_point(path)
+    path = path_process.append_point(path)
     path_track(path)
     path = [(200, 375), (350,375), (350,25), (135,25)]
     print(path)
-    path = pure_pursuit_target.append_point(path)
+    path = path_process.append_point(path)
     path_track(path)
     
     set_vel(0, 0)
