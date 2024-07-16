@@ -108,11 +108,11 @@ def pure_pursuit(current_vel, current_pos, target_pos):
     return np.linalg.norm(current_vector)/(2*np.sin(alpha)), alpha
 
 def pure_pursuit_vel(v_mid, r, l):
-    if -l/2 <= r <= l/2:
+    if -l <= r <= l:
         if r >= 0:
-            r = l/2
+            r = l
         else:
-            r = -l/2
+            r = -l
     set_vel(int(v_mid*(1-l/(2*r))), int(v_mid*(1+l/(2*r))))
 
 
@@ -140,7 +140,7 @@ def pure_pursuit_vel(v_mid, r, l):
     # #         break
 
 def path_track(path):
-    led = 20
+    led = 30
     interval = 2
     path_interpolated = path_process.interpolate_path(path, interval)
     while True:
@@ -153,18 +153,18 @@ def path_track(path):
         r, alpha=pure_pursuit(get_curent_vel(), get_current_pos(), target)
         print("pos:", current_pos, "target:", target)
         print("r:",r,"  alpha:",alpha)
-        v_mid = 160/(np.abs(alpha)*60)**0.5
+        v_mid = 80-(np.abs(alpha)*60)**1.5
         if v_mid>100:
             v_mid=100
         elif v_mid<20:
             v_mid=20
-        pure_pursuit_vel(v_mid, r=r, l=16)
-        # if np.dot(current_vector, sub_target_vector) <= 0:  # Adjust the threshold as needed
-        #     break
         distance_to_target = np.linalg.norm(current_vector)
+        if distance_to_target <= 30:
+            v_mid=20
+        pure_pursuit_vel(v_mid, r=r, l=18)
         if distance_to_target <= 30 and np.dot(current_vector, np.subtract(path[-2],path[-3])) <= 0:
             break
-        time.sleep(0.05)
+        time.sleep(0.1)
     set_vel(0,0)
         
     
@@ -181,8 +181,8 @@ if __name__ == '__main__':
     print('serial opened')
 
     # 建立地图，找到path
-    points = [(180, 60), (340, 80), (30, 90),
-              (30, 240), (180, 225), (215, 235), (340, 230),
+    points = [(180, 60), (340, 80), (35, 90),
+              (35, 225), (180, 225), (210, 235), (340, 230),
               (30, 385), (220, 375), (340, 375), (420, 375)]
     obstacles = [((180, 50), (310, 200)),
                  ((60, 110), (170, 200)),
@@ -191,7 +191,7 @@ if __name__ == '__main__':
                  ((230, 260), (310, 350)),
                  ((370, 260), (450, 350))]
     start = (135, 25)
-    goal = (210, 372)
+    goal = (210, 360)
     points.append(start)
     points.append(goal)
     graph = A_star_v2.create_graph(points, obstacles)
@@ -222,7 +222,7 @@ if __name__ == '__main__':
     time.sleep(2)
     path = pure_pursuit_target.append_point(path)
     path_track(path)
-    path = [(220, 375), (370,375), (370,25), (135,25)]
+    path = [(200, 375), (350,375), (350,25), (135,25)]
     print(path)
     path = pure_pursuit_target.append_point(path)
     path_track(path)
